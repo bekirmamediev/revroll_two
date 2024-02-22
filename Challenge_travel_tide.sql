@@ -100,6 +100,98 @@ LIMIT 5
 
 
 
+/*
+Question #1: 
+Vibestream is designed for users to share brief updates about how they are feeling, 
+as such the platform enforces a character limit of 25. How many posts are exactly 25 characters long?
+*/
+
+SELECT 
+	COUNT(post_id) as char_limit_posts
+FROM posts
+WHERE LENGTH(content) = 25
+
+
+/*
+Question #2: 
+Users JamesTiger8285 and RobertMermaid7605 are Vibestream’s most active posters.
+
+Find the difference in the number of posts these two users made
+on each day that at least one of them made a post.
+Return dates where the absolute value of the difference between posts made is greater than 2 
+(i.e dates where JamesTiger8285 made at least 3 more posts than RobertMermaid7605 or vice versa).
+*/
+
+WITH cte AS(
+  SELECT 
+  p.post_date
+	, SUM(CASE WHEN u.user_name = 'JamesTiger8285' THEN 1 ELSE 0 END) as james_post 
+	, SUM(CASE WHEN u.user_name = 'RobertMermaid7605' THEN 1 ELSE 0  END) as robert_post
+FROM posts p
+INNER JOIN users u ON p.user_id=u.user_id
+GROUP BY 1 
+)
+
+SELECT 
+	post_date 
+FROM cte 
+WHERE ABS(james_post - robert_post) > 2
+
+
+/*
+Question #3: 
+Most users have relatively low engagement and few connections. User WilliamEagle6815, for example, has only 2 followers. 
+
+Network Analysts would say this user has two 1-step path relationships. Having 2 followers doesn’t mean WilliamEagle6815 is isolated, however. Through his followers, he is indirectly connected to the larger Vibestream network.  
+
+
+Consider all users up to 3 steps away from this user:
+
+
+1-step path (X → WilliamEagle6815)
+2-step path (Y → X → WilliamEagle6815)
+3-step path (Z → Y → X → WilliamEagle6815)
+
+Write a query to find follower_id of all users within 4 steps of WilliamEagle6815. Order by follower_id and return the top 10 records.
+*/
+
+SELECT 
+	follower_id 
+FROM follows
+WHERE followee_id IN (SELECT 
+												follower_id 
+											FROM follows
+											WHERE followee_id IN (SELECT 
+																							follower_id 
+																						FROM follows
+																						WHERE followee_id IN (SELECT 
+																																		follower_id 
+																																	FROM follows
+                                                                  WHERE followee_id IN (SELECT 
+                                                                                          user_id
+                                                                                        FROM users
+                                                                                        WHERE user_name = 'WilliamEagle6815'
+                                                                                        )
+                                                                  )
+                                            )
+                      )
+GROUP BY follower_id 
+ORDER BY follower_id
+LIMIT 10 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
